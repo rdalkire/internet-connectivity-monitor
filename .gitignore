@@ -28,3 +28,5 @@ nb-configuration.xml
 .mtj.tmp/
 hs_err_pid*
 
+.settings/org.eclipse.jdt.core.prefs
+bin/icon.ico
