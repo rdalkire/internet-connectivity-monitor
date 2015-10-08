@@ -29,4 +29,6 @@ nb-configuration.xml
 hs_err_pid*
 
 .settings/org.eclipse.jdt.core.prefs
+/bin/
 bin/icon.ico
+.gitignore.orig
