@@ -61,8 +61,9 @@ public class UserInterface {
 	JButton btnExit = new JButton("Exit");
 	JButton btnAbout = new JButton("About");
 	
-	public static JCheckBox CHKSECONDARYADDRESS = new JCheckBox("Monitor a second address:");
-	JLabel lblSecondaryAddress = new JLabel("http://");
+	public static JCheckBox CHKSECONDARYADDRESS = new JCheckBox(
+	        "Monitor a secure address:");
+	JLabel lblSecondaryAddress = new JLabel("https://");
 	JTextField txtSecondaryAddress = new JTextField(18);
 	JLabel lblSecondaryFrequency = new JLabel("Frequency:");
 	JTextField txtSecondaryFrequency = new JTextField(3);
@@ -323,8 +324,8 @@ public class UserInterface {
 					OUTPUT.append("ERROR: The secondary \"Frequency\" field does not have a proper integer number!" + System.getProperty("line.separator") + System.getProperty("line.separator"));
 					return;
 				}	
-							
-				netRunSecondary.setAddress("http://" + txtSecondaryAddress.getText());			
+				
+				netRunSecondary.setAddress("https://" + txtSecondaryAddress.getText());			
 				
 				netRunSecondary.setFlag((byte) 0);
 			}

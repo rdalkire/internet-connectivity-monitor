@@ -10,6 +10,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.net.*;
+
+import javax.net.ssl.HttpsURLConnection;
+
+//import java.net.ssl.Http
 import java.util.Date;
 
 public class HttpConn implements Runnable {
@@ -57,15 +61,25 @@ public class HttpConn implements Runnable {
 	}
 	
 	public void StartTest(){		
-											
+	    
+	        URL url = null;
+	        HttpURLConnection connection = null;
+	        // TODO maybe we don't need content to test the connection
+	        // Object testObject = null;
+	        int responseCode = 0;
 			try {
 				
 				//write or update the automatic log file if the option is selected
 				AutoWriteLogFile();
 				
 				//define URL and try to connect to server
-				URL url = new URL(address);            
-				HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+				url = new URL(address);
+				
+				if(address.startsWith("https")){
+				    connection = (HttpsURLConnection)url.openConnection();
+				}else{
+				    connection = (HttpURLConnection)url.openConnection();
+				}
 				
 				//current time saved in a String
 				String date = String.format("%ta %<tb %<td %<tT", new Date());
@@ -75,18 +89,26 @@ public class HttpConn implements Runnable {
 				//If the server response data is successfully retrieved, internet connectivity is assumed to be good.
 				//If server response data cannot be retrieved for any reason, internet connectivity is assumed to be lost.
 				//When data is not retrieved the method throws an exeption. 
-				@SuppressWarnings("unused")
-				Object testObject = connection.getContent();
-				 				
-				//send result to the output textbox on the main UserInterface class
-				UserInterface.OUTPUT.append(date + "\t" + address + "\t" + "OK" + System.getProperty("line.separator"));
-				UserInterface.OUTPUT.setCaretPosition(UserInterface.OUTPUT.getDocument().getLength());
+				// @SuppressWarnings("unused")
+				// testObject = connection.getContent();
 				
-				//free resources
-				connection.disconnect();
-				connection = null;
-				testObject = null;
-				url = null;
+				try{
+	                responseCode = connection.getResponseCode();
+				}catch(javax.net.ssl.SSLException e){
+				    System.err.println("SSLException. Ignoring.");
+				    responseCode = 200;
+				}
+				
+				if(responseCode != 200){
+				    throw new Exception("Response code: " + responseCode);
+				}
+				
+				//send result to the output textbox on the main UserInterface class
+				UserInterface.OUTPUT.append(date + "\t" + address + "\t" + 
+				        "OK" + System.getProperty("line.separator"));
+				
+				UserInterface.OUTPUT.setCaretPosition(
+				        UserInterface.OUTPUT.getDocument().getLength());
 				
 				//announce to the disconnection flag that the connection was successful
 				if (objectName == "Primary"){
@@ -98,12 +120,11 @@ public class HttpConn implements Runnable {
 				//perform a disconnection counter check
 				disconnectionObject.run();
 				
-				
-				
 				//write or update the automatic log file if the option is selected
 				AutoWriteLogFile();
 				
-				//wait a few seconds before repeating the process. The waiting time is defined by the user (in the "frequency" field)
+				// wait a few seconds before repeating the process. The waiting 
+				// time is defined by the user (in the "frequency" field)
 				try {					
 					Thread.sleep(frequency * 1000);					
                 } 
@@ -113,6 +134,8 @@ public class HttpConn implements Runnable {
         	} 
 			catch (Exception e) {
         		
+			    e.printStackTrace();
+			    
 				//write or update the automatic log file if the option is selected
 				AutoWriteLogFile();
 				
@@ -120,8 +143,11 @@ public class HttpConn implements Runnable {
         		String date = String.format("%ta %<tb %<td %<tT", new Date());
         		        		
         		//send result to the output textbox on the main UserInterface class
-        		UserInterface.OUTPUT.append(date + "\t" + address + "\t" + "NOT CONNECTED" + System.getProperty("line.separator"));
-        		UserInterface.OUTPUT.setCaretPosition(UserInterface.OUTPUT.getDocument().getLength());
+        		UserInterface.OUTPUT.append(date + "\t" + address + "\t" + 
+        		        "NOT CONNECTED" + System.getProperty("line.separator"));
+        		
+        		UserInterface.OUTPUT.setCaretPosition( 
+        		        UserInterface.OUTPUT.getDocument().getLength());
         		
 				//announce to the disconnection flag that the connection was unsuccessful
 				if (objectName == "Primary"){
@@ -134,18 +160,20 @@ public class HttpConn implements Runnable {
 				disconnectionObject.clearAudioFile();
 				disconnectionObject.run();
 				
-				
-
 				//write or update the automatic log file if the option is selected
 				AutoWriteLogFile();
 				
-        		//wait a few seconds before repeating the process. The waiting time is defined by the user (in the "frequency" field)
+        		// wait a few seconds before repeating the process. The waiting 
+				// time is defined by the user (in the "frequency" field)
         		try {
         			Thread.sleep(frequency * 1000);
         		} 
         		catch (Exception ex){
         			System.out.println("Thread.sleep exception on CATCH");
         		}
+        	}finally{
+        	    //free resources
+                connection.disconnect();
         	}
 		}
 	
@@ -154,7 +182,8 @@ public class HttpConn implements Runnable {
 		if (fileLocked != 1 && UserInterface.CHKAUTOSAVE.isSelected()) 
 		{
 			try {
-				//get path from textbox, and then add escape characters to slashes to avoid errors.
+				//get path from textbox, and then add escape characters to 
+			    // slashes to avoid errors.
 				String rawPath = UserInterface.TXTAUTOSAVEPATH.getText();
 				String fixedPath = rawPath.replace("\\", "\\\\");
 				
@@ -172,8 +201,17 @@ public class HttpConn implements Runnable {
 				bw.close();
 				
 			} catch (Exception e) {
-				UserInterface.OUTPUT.append(System.getProperty("line.separator") + "Cannot automatically create or write to file. Please check path." + System.getProperty("line.separator"));
-				UserInterface.OUTPUT.append("It's possible that access to the selected location is denied. Try using a different path." + System.getProperty("line.separator") + System.getProperty("line.separator"));
+				UserInterface.OUTPUT.append(
+				        System.getProperty("line.separator") +
+				        "Cannot automatically create or write to file. "
+				        + "Please check path." +
+				        System.getProperty("line.separator") );
+				
+				UserInterface.OUTPUT.append(
+				        "It's possible that access to the selected location "
+				        + "is denied. Try using a different path." + 
+				                System.getProperty("line.separator") + 
+				                System.getProperty("line.separator"));
 				e.printStackTrace();
 				//stop trying to automatically write to file if it's not accessible
 				fileLocked = 1;

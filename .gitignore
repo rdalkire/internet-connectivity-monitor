@@ -32,3 +32,4 @@ hs_err_pid*
 /bin/
 bin/icon.ico
 .gitignore.orig
+Log.txt
